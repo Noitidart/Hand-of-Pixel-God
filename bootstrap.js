@@ -92,198 +92,207 @@ function startup(aData, aReason) {
 			var cWin = win.gBrowser.selectedBrowser.contentWindow;
 			var cDoc = cWin.document;
 			if (cWin.location.host.toLowerCase() == 'pixact.ly') {
-				cWin.alert(myServices.stringBundle.GetStringFromName('succesfully-injected'));
-				
-				if (getWinMacNix(true) == 2) {
-					Cu.import('resource://gre/modules/ctypes.jsm');
-	
-					/*start getcursorpos*/
-					var lib = ctypes.open("user32.dll");
-	
-					/* Declare the signature of the function we are going to call */
-					var struct_lpPoint = new ctypes.StructType("lpPoint",
-											[ { "x": ctypes.int },
-											  { "y": ctypes.int } ]);
-					var GetCursorPos = lib.declare('GetCursorPos', ctypes.winapi_abi, ctypes.bool, struct_lpPoint.ptr);
-					/*end getcursorpos*/
-	
-					/*start setcursorpos*/
-					//var lib = ctypes.open("user32.dll"); //already called on line 4
-					var SetCursorPos = lib.declare('SetCursorPos', ctypes.winapi_abi, ctypes.bool, ctypes.int, ctypes.int)
-					/*end setcursorpos*/
-	
-					var mouseX0;
-					var mouseX1;
-					var mouseY0;
-					var mouseY1;
-					var can = cDoc.querySelector('section[id=canvas]');
-	
-					function trackPageXY(e) {
-					  mouseX1 = e.pageX;
-					  mouseY1 = e.pageY;
-					}
-					var moveTillPageXRight;
-					var moveTillPageYRight;
-					var delayIt;
-	
-					can.addEventListener('mouseup', function(e) {
-					  
-					  can.removeEventListener('mousemove', trackPageXY, false);
-					  try {
-					   cWin.clearTimeout(delayIt);
-					   cWin.clearInterval(moveTillPageXRight);
-					   cWin.clearInterval(moveTillPageYRight);
-					  } catch (ignore) {}
-						mouseX1 = e.pageX;
-						mouseY1 = e.pageY;
-					  //console.log('mouseX1:', e.pageX);
-					  //console.log('mouseY1:', e.pageY);
-						  var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
-						var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
-					  
-					  //console.log('mouseXDiff:', mouseX1-mouseX0, 'failWidth:', mouseX1-mouseX0-width);
-					  //console.log('mouseYDiff:', mouseY1-mouseY0, 'failHeight:', mouseY1-mouseY0-height);
-					  
-					}, false);
-					can.addEventListener('mousedown', function(e) {
-					  can.addEventListener('mousemove', trackPageXY, false);
-					  delayIt = cWin.setTimeout(function() {
-						 mouseX0 = e.pageX;
-						mouseY0 = e.pageY;
-						 //console.log('mouseX0:',e.pageX);
-						 //console.log('mouseY0', e.pageY);
+					try {
+						var can = cDoc.querySelector('section[id=canvas]');
 						
-						 var point = new struct_lpPoint;
-						 var ret = GetCursorPos(point.address());
-						if (!ret) {
-						  //console.warn('failed to get cursor pos')
-						  return;
-						}
-						//console.log('point:', point.x, point.y);
-	
-						var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
-						var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
-						
-						//console.log('width:', width, 'height:', height);
-						
-						var xOffset = 0;
-						moveTillPageXRight = cWin.setInterval(function() {
-						  if (xOffset > 0 && mouseX1-mouseX0-width >= 0) {
-							cWin.clearInterval(moveTillPageXRight);
-							//console.log('reached proper width')
-							//now move to get y right
-							var yOffset = 0;
-							moveTillPageYRight = cWin.setInterval(function() {
-							  if (yOffset > 0 && mouseY1-mouseY0-height >= 0) {
-								//console.log('reached proper height');
-								cWin.clearInterval(moveTillPageYRight);
-								return;
-							  }
-							  yOffset++;
-							  var ret = SetCursorPos(point.x + xOffset, point.y + yOffset);
-							  if (!ret) {
-								//console.warn('failed to set cursor pos');
-								return;
-							  }
-							}, 10);
-							//end nw move to get y right
+						if (can.hasAttribute('hopg_injected')) {
+							cWin.alert(myServices.stringBundle.GetStringFromName('already-injected'));
 							return;
-						  }
-						  xOffset++;
-						  var ret = SetCursorPos(point.x + xOffset, point.y);
-						  if (!ret) {
-							//console.warn('failed to set cursor pos');
-							return;
-						  }
-						}, 10);
-						
-	
-	
-						
-						/*
-						//for some reason this is offset so not accurate
-						//console.log('move to:', point.x + width, point.y + height)
-						var ret = SetCursorPos(point.x + width, point.y + height);
-						if (!ret) {
-						  //console.warn('failed to set cursor pos');
-						  return;
 						}
-						*/
-					  }, 1000);
-					}, false);
-				} else {
-				  	//mac or nix					
-					var can = cDoc.querySelector('section[id=canvas]');
+						if (getWinMacNix(true) == 2) {
+							Cu.import('resource://gre/modules/ctypes.jsm');
+			
+							/*start getcursorpos*/
+							var lib = ctypes.open("user32.dll");
+			
+							/* Declare the signature of the function we are going to call */
+							var struct_lpPoint = new ctypes.StructType("lpPoint",
+													[ { "x": ctypes.int },
+													  { "y": ctypes.int } ]);
+							var GetCursorPos = lib.declare('GetCursorPos', ctypes.winapi_abi, ctypes.bool, struct_lpPoint.ptr);
+							/*end getcursorpos*/
+			
+							/*start setcursorpos*/
+							//var lib = ctypes.open("user32.dll"); //already called on line 4
+							var SetCursorPos = lib.declare('SetCursorPos', ctypes.winapi_abi, ctypes.bool, ctypes.int, ctypes.int)
+							/*end setcursorpos*/
+			
+							var mouseX0;
+							var mouseX1;
+							var mouseY0;
+							var mouseY1;
+			
+							function trackPageXY(e) {
+							  mouseX1 = e.pageX;
+							  mouseY1 = e.pageY;
+							}
+							var moveTillPageXRight;
+							var moveTillPageYRight;
+							var delayIt;
+			
+							can.addEventListener('mouseup', function(e) {
+							  
+							  can.removeEventListener('mousemove', trackPageXY, false);
+							  try {
+							   cWin.clearTimeout(delayIt);
+							   cWin.clearInterval(moveTillPageXRight);
+							   cWin.clearInterval(moveTillPageYRight);
+							  } catch (ignore) {}
+								mouseX1 = e.pageX;
+								mouseY1 = e.pageY;
+							  //console.log('mouseX1:', e.pageX);
+							  //console.log('mouseY1:', e.pageY);
+								  var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
+								var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
+							  
+							  //console.log('mouseXDiff:', mouseX1-mouseX0, 'failWidth:', mouseX1-mouseX0-width);
+							  //console.log('mouseYDiff:', mouseY1-mouseY0, 'failHeight:', mouseY1-mouseY0-height);
+							  
+							}, false);
+							can.addEventListener('mousedown', function(e) {
+							  can.addEventListener('mousemove', trackPageXY, false);
+							  delayIt = cWin.setTimeout(function() {
+								 mouseX0 = e.pageX;
+								mouseY0 = e.pageY;
+								 //console.log('mouseX0:',e.pageX);
+								 //console.log('mouseY0', e.pageY);
+								
+								 var point = new struct_lpPoint;
+								 var ret = GetCursorPos(point.address());
+								if (!ret) {
+								  //console.warn('failed to get cursor pos')
+								  return;
+								}
+								//console.log('point:', point.x, point.y);
+			
+								var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
+								var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
+								
+								//console.log('width:', width, 'height:', height);
+								
+								var xOffset = 0;
+								moveTillPageXRight = cWin.setInterval(function() {
+								  if (xOffset > 0 && mouseX1-mouseX0-width >= 0) {
+									cWin.clearInterval(moveTillPageXRight);
+									//console.log('reached proper width')
+									//now move to get y right
+									var yOffset = 0;
+									moveTillPageYRight = cWin.setInterval(function() {
+									  if (yOffset > 0 && mouseY1-mouseY0-height >= 0) {
+										//console.log('reached proper height');
+										cWin.clearInterval(moveTillPageYRight);
+										return;
+									  }
+									  yOffset++;
+									  var ret = SetCursorPos(point.x + xOffset, point.y + yOffset);
+									  if (!ret) {
+										//console.warn('failed to set cursor pos');
+										return;
+									  }
+									}, 10);
+									//end nw move to get y right
+									return;
+								  }
+								  xOffset++;
+								  var ret = SetCursorPos(point.x + xOffset, point.y);
+								  if (!ret) {
+									//console.warn('failed to set cursor pos');
+									return;
+								  }
+								}, 10);
+								
+			
+			
+								
+								/*
+								//for some reason this is offset so not accurate
+								//console.log('move to:', point.x + width, point.y + height)
+								var ret = SetCursorPos(point.x + width, point.y + height);
+								if (!ret) {
+								  //console.warn('failed to set cursor pos');
+								  return;
+								}
+								*/
+							  }, 1000);
+							}, false);
+						} else {
+							//mac or nix					
+							var can = cDoc.querySelector('section[id=canvas]');
 
-					var moveTillPageXRight;
-					var moveTillPageYRight;
-					var delayIt;
-	
-					can.addEventListener('mouseup', function(e) {
-					  
-					  try {
-					   cWin.clearTimeout(delayIt);
-					   cWin.clearInterval(moveTillPageXRight);
-					   cWin.clearInterval(moveTillPageYRight);
-					  } catch (ignore) {}
-					  
-					}, false);
-					
-					var utils = cWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-						
-					can.addEventListener('mousedown', function(e) {
-					  delayIt = cWin.setTimeout(function() {
-	
-						var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
-						var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
-						
-						//console.log('width:', width, 'height:', height);
-						
-						var xOffset = 0;
-						moveTillPageXRight = cWin.setInterval(function() {
-						  if (xOffset > 0 && (e.pageX + xOffset)-e.pageX-width >= 0) {
-							cWin.clearInterval(moveTillPageXRight);
-							//console.log('reached proper width')
-							//now move to get y right
-							var yOffset = 0;
-							moveTillPageYRight = cWin.setInterval(function() {
-							  if (yOffset > 0 && (e.pageY + yOffset)-e.pageY-height >= 0) {
-								//console.log('reached proper height');
-								cWin.clearInterval(moveTillPageYRight);
-								return;
-							  }
-							  yOffset++;
-							  utils.sendMouseEvent('mousemove',e.pageX + xOffset,e.pageY + yOffset, 0, 1, 0);
-							  //console.log('ymove');
-							}, 10);	
-							//end nw move to get y right
-							return;
-						  }
-						  xOffset++;
-						  utils.sendMouseEvent('mousemove',e.pageX + xOffset,e.pageY, 0, 1, 0);
-						  //console.log('xmove');
-						}, 10);
-						
-	
-	
-						
-						/*
-						//for some reason this is offset so not accurate
-						//console.log('move to:', point.x + width, point.y + height)
-						var ret = SetCursorPos(point.x + width, point.y + height);
-						if (!ret) {
-						  //console.warn('failed to set cursor pos');
-						  return;
+							var moveTillPageXRight;
+							var moveTillPageYRight;
+							var delayIt;
+			
+							can.addEventListener('mouseup', function(e) {
+							  
+							  try {
+							   cWin.clearTimeout(delayIt);
+							   cWin.clearInterval(moveTillPageXRight);
+							   cWin.clearInterval(moveTillPageYRight);
+							  } catch (ignore) {}
+							  
+							}, false);
+							
+							var utils = cWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+								
+							can.addEventListener('mousedown', function(e) {
+							  delayIt = cWin.setTimeout(function() {
+			
+								var width = parseInt(cDoc.querySelector('.width-copy .value').textContent);
+								var height = parseInt(cDoc.querySelector('.height-copy .value').textContent);
+								
+								//console.log('width:', width, 'height:', height);
+								
+								var xOffset = 0;
+								moveTillPageXRight = cWin.setInterval(function() {
+								  if (xOffset > 0 && (e.pageX + xOffset)-e.pageX-width >= 0) {
+									cWin.clearInterval(moveTillPageXRight);
+									//console.log('reached proper width')
+									//now move to get y right
+									var yOffset = 0;
+									moveTillPageYRight = cWin.setInterval(function() {
+									  if (yOffset > 0 && (e.pageY + yOffset)-e.pageY-height >= 0) {
+										//console.log('reached proper height');
+										cWin.clearInterval(moveTillPageYRight);
+										return;
+									  }
+									  yOffset++;
+									  utils.sendMouseEvent('mousemove',e.pageX + xOffset,e.pageY + yOffset, 0, 1, 0);
+									  //console.log('ymove');
+									}, 10);	
+									//end nw move to get y right
+									return;
+								  }
+								  xOffset++;
+								  utils.sendMouseEvent('mousemove',e.pageX + xOffset,e.pageY, 0, 1, 0);
+								  //console.log('xmove');
+								}, 10);
+								
+			
+			
+								
+								/*
+								//for some reason this is offset so not accurate
+								//console.log('move to:', point.x + width, point.y + height)
+								var ret = SetCursorPos(point.x + width, point.y + height);
+								if (!ret) {
+								  //console.warn('failed to set cursor pos');
+								  return;
+								}
+								*/
+							  }, 1000);
+							}, false);
+							
 						}
-						*/
-					  }, 1000);
-					}, false);
-					
+						can.setAttribute('hopg_injected', true);
+						cWin.alert(myServices.stringBundle.GetStringFromName('succesfully-injected'));
+					} catch (ex) {
+						cWin.alert(myServices.stringBundle.GetStringFromName('failed-inject'));
+						throw ex;
+					}
+				} else {
+					cWin.alert(myServices.stringBundle.GetStringFromName('not-on-pixact-ly-game-page-cannot-inject'));
 				}
-				
-			} else {
-				cWin.alert(myServices.stringBundle.GetStringFromName('not-on-pixact-ly-game-page-cannot-inject'));
-			}
 		}
 	});
 	
